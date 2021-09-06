@@ -2711,7 +2711,7 @@ class Multiline(Element):
 
     def __init__(self, default_text='', enter_submits=False, disabled=False, autoscroll=False, border_width=None,
                  size=(None, None), s=(None, None), auto_size_text=None, background_color=None, text_color=None, change_submits=False,
-                 enable_events=False, do_not_clear=True, key=None, k=None, write_only=False, auto_refresh=False, reroute_stdout=False, reroute_stderr=False, reroute_cprint=False, echo_stdout_stderr=False, focus=False, font=None, pad=None, tooltip=None, justification=None, no_scrollbar=False, expand_x=False, expand_y=False, rstrip=True, right_click_menu=None, visible=True, metadata=None):
+                 enable_events=False, do_not_clear=True, key=None, k=None, write_only=False, auto_refresh=False, reroute_stdout=False, reroute_stderr=False, reroute_cprint=False, echo_stdout_stderr=False, focus=False, font=None, pad=None, tooltip=None, justification=None, wrap=tk.WORD, no_scrollbar=False, expand_x=False, expand_y=False, rstrip=True, right_click_menu=None, visible=True, metadata=None):
         """
         :param default_text:       Initial text to show
         :type default_text:        (str)
@@ -2765,6 +2765,8 @@ class Multiline(Element):
         :type tooltip:             (str)
         :param justification:      text justification. left, right, center. Can use single characters l, r, c.
         :type justification:       (str)
+        :param wrap:               Word wrap by default, can be character or turned off
+        :type wrap:                (str) tk.WORD, tk.CHAR, tk.NONE
         :param no_scrollbar:       If False then a scrollbar will be shown (the default)
         :type no_scrollbar:        (bool)
         :param expand_x:           If True the element will automatically expand in the X direction to fill available space
@@ -2813,6 +2815,7 @@ class Multiline(Element):
             self.reroute_stderr_to_here()
         self.no_scrollbar = no_scrollbar
         sz = size if size != (None, None) else s
+        self.wrap=wrap
 
         super().__init__(ELEM_TYPE_INPUT_MULTILINE, size=sz, auto_size_text=auto_size_text, background_color=bg,
                          text_color=fg, key=key, pad=pad, tooltip=tooltip, font=font or DEFAULT_FONT, visible=visible, metadata=metadata)
@@ -13733,7 +13736,7 @@ def PackFormIntoFrame(form, containing_frame, toplevel_form):
                 if element.no_scrollbar:
                     element.TKText = element.Widget = tk.Text(tk_row_frame, width=width, height=height, wrap='word', bd=bd, font=font, relief=RELIEF_SUNKEN)
                 else:
-                    element.TKText = element.Widget = tk.scrolledtext.ScrolledText(tk_row_frame, width=width, height=height, wrap='word', bd=bd, font=font,
+                    element.TKText = element.Widget = tk.scrolledtext.ScrolledText(tk_row_frame, width=width, height=height, wrap=element.wrap, bd=bd, font=font,
                                                                                    relief=RELIEF_SUNKEN)
                 if element.DefaultText:
                     element.TKText.insert(1.0, element.DefaultText)  # set the default text
