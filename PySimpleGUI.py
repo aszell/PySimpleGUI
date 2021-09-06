@@ -794,6 +794,46 @@ class ToolTip:
             self.tipwindow.destroy()
         self.tipwindow = None
 
+# ------------------------------------------------------------------------- #
+#                 Multiline texbox with horizontal scrollbar                #
+# ------------------------------------------------------------------------- #
+
+class ScrolledTextHbar(tk.Text):
+    def __init__(self, master=None, **kw):
+        horizontal_scrollbar = (kw.get('wrap', tk.WORD) == tk.NONE)
+        
+        self.frame = tk.Frame(master)
+        self.vbar = tk.Scrollbar(self.frame)
+        self.vbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        if horizontal_scrollbar:
+            self.hbar = tk.Scrollbar(self.frame, orient=tk.HORIZONTAL)
+            self.hbar.pack(side=tk.BOTTOM, fill=tk.X)
+
+        kw.update({'yscrollcommand': self.vbar.set})
+
+        if horizontal_scrollbar:
+            kw.update({'xscrollcommand': self.hbar.set})
+
+        tk.Text.__init__(self, self.frame, **kw)
+        self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.vbar['command'] = self.yview
+
+        if horizontal_scrollbar:
+            self.hbar['command'] = self.xview
+
+        # Copy geometry methods of self.frame without overriding Text
+        # methods -- hack!
+        text_meths = vars(tk.Text).keys()
+        methods = vars(tk.Pack).keys() | vars(tk.Grid).keys() | vars(tk.Place).keys()
+        methods = methods.difference(text_meths)
+
+        for m in methods:
+            if m[0] != '_' and m != 'config' and m != 'configure':
+                setattr(self, m, getattr(self.frame, m))
+
+    def __str__(self):
+        return str(self.frame)
 
 # ---------------------------------------------------------------------- #
 # Cascading structure.... Objects get larger                             #
@@ -2711,7 +2751,10 @@ class Multiline(Element):
 
     def __init__(self, default_text='', enter_submits=False, disabled=False, autoscroll=False, border_width=None,
                  size=(None, None), s=(None, None), auto_size_text=None, background_color=None, text_color=None, change_submits=False,
-                 enable_events=False, do_not_clear=True, key=None, k=None, write_only=False, auto_refresh=False, reroute_stdout=False, reroute_stderr=False, reroute_cprint=False, echo_stdout_stderr=False, focus=False, font=None, pad=None, tooltip=None, justification=None, wrap=tk.WORD, no_scrollbar=False, expand_x=False, expand_y=False, rstrip=True, right_click_menu=None, visible=True, metadata=None):
+                 enable_events=False, do_not_clear=True, key=None, k=None, write_only=False, auto_refresh=False, reroute_stdout=False,
+                 reroute_stderr=False, reroute_cprint=False, echo_stdout_stderr=False, focus=False, font=None, pad=None, tooltip=None,
+                 justification=None, wrap=tk.WORD, no_scrollbar=False, expand_x=False, expand_y=False, rstrip=True, right_click_menu=None,
+                 visible=True, metadata=None):
         """
         :param default_text:       Initial text to show
         :type default_text:        (str)
@@ -13736,7 +13779,7 @@ def PackFormIntoFrame(form, containing_frame, toplevel_form):
                 if element.no_scrollbar:
                     element.TKText = element.Widget = tk.Text(tk_row_frame, width=width, height=height, wrap='word', bd=bd, font=font, relief=RELIEF_SUNKEN)
                 else:
-                    element.TKText = element.Widget = tk.scrolledtext.ScrolledText(tk_row_frame, width=width, height=height, wrap=element.wrap, bd=bd, font=font,
+                    element.TKText = element.Widget = ScrolledTextHbar(tk_row_frame, width=width, height=height, wrap=element.wrap, bd=bd, font=font,
                                                                                    relief=RELIEF_SUNKEN)
                 if element.DefaultText:
                     element.TKText.insert(1.0, element.DefaultText)  # set the default text
